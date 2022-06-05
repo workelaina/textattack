@@ -91,9 +91,11 @@ class GoalFunction(ReprMixin, ABC):
         results = []
         if self.query_budget < float("inf"):
             queries_left = self.query_budget - self.num_queries
-            attacked_text_list = attacked_text_list[:queries_left]
-        self.num_queries += len(attacked_text_list)
-        model_outputs = self._call_model(attacked_text_list)
+            #attacked_text_list = attacked_text_list[:queries_left]
+        else:
+            queries_left = float('inf')
+        #self.num_queries += len(attacked_text_list) # If we use cache, we do not add redundant query. GO TO line 157.
+        attacked_text_list, model_outputs = self._call_model(attacked_text_list, queries_left=queries_left) # instead of filtering over-budget queries before check cache, we filter these after check cache (only consider uncached queries).
         for attacked_text, raw_output in zip(attacked_text_list, model_outputs):
             displayed_output = self._get_displayed_output(raw_output)
             goal_status = self._get_goal_status(
@@ -158,6 +160,7 @@ class GoalFunction(ReprMixin, ABC):
             return []
 
         inputs = [at.tokenizer_input for at in attacked_text_list]
+        self.num_queries += len(inputs)
         outputs = []
         i = 0
         while i < len(inputs):
@@ -190,14 +193,16 @@ class GoalFunction(ReprMixin, ABC):
 
         return self._process_model_outputs(attacked_text_list, outputs)
 
-    def _call_model(self, attacked_text_list):
+    def _call_model(self, attacked_text_list, queries_left=float('inf')):
         """Gets predictions for a list of ``AttackedText`` objects.
 
         Gets prediction from cache if possible. If prediction is not in
         the cache, queries model and stores prediction in cache.
         """
         if not self.use_cache:
-            return self._call_model_uncached(attacked_text_list)
+            if queries_left < float('inf'):
+                attacked_text_list = attacked_text_list[:queries_left] 
+            return attacked_text_list, self._call_model_uncached(attacked_text_list)
         else:
             uncached_list = []
             for text in attacked_text_list:
@@ -213,11 +218,14 @@ class GoalFunction(ReprMixin, ABC):
                 for text in attacked_text_list
                 if text not in self._call_model_cache
             ]
+            if queries_left < float('inf'):
+                uncached_list = uncached_list[:queries_left]
             outputs = self._call_model_uncached(uncached_list)
             for text, output in zip(uncached_list, outputs):
                 self._call_model_cache[text] = output
-            all_outputs = [self._call_model_cache[text] for text in attacked_text_list]
-            return all_outputs
+            all_outputs = [self._call_model_cache[text] for text in attacked_text_list if text in self._call_model_cache]
+            attacked_text_list = [text for text in attacked_text_list if text in self._call_model_cache]
+            return attacked_text_list, all_outputs
 
     def extra_repr_keys(self):
         attrs = []

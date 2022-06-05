@@ -72,22 +72,22 @@ ATTACK_RECIPE_NAMES = {
     "lsh-with-attention-embedding-hyp":"textattack.attack_recipes.LSHWithAttentionEmbeddingHypothesis",
     "lsh-with-attention-embedding-no-POS-hyp":"textattack.attack_recipes.LSHWithAttentionEmbeddingGenHypothesis",
 
-    "bayesattack-wordnet":"textattack.attack_recipes.BayesAttackWordNet",
-    "bayesattack-hownet":"textattack.attack_recipes.BayesAttackHowNet",
-    "bayesattack-embedding":"textattack.attack_recipes.BayesAttackEmbedding",
-    "bayesattack-embedding-no-POS":"textattack.attack_recipes.BayesAttackEmbeddingGen",
-    "bayesattack-bae":"textattack.attack_recipes.BayesAttackBAE",
-    "bayesattack-bert-attack":"textattack.attack_recipes.BayesAttackBERTAttack",
+    "bayesattack-wordnet":"textattack.attack_recipes.DiscreteBlockBayesAttackWordNet",
+    "bayesattack-hownet":"textattack.attack_recipes.DiscreteBlockBayesAttackHowNet",
+    "bayesattack-embedding":"textattack.attack_recipes.DiscreteBlockBayesAttackEmbedding",
+    "bayesattack-embedding-no-POS":"textattack.attack_recipes.DiscreteBlockBayesAttackEmbeddingGen",
+    "bayesattack-bae":"textattack.attack_recipes.DiscreteBlockBayesAttackBAE",
+    "bayesattack-bert-attack":"textattack.attack_recipes.DiscreteBlockBayesAttackBERTAttack",
 
-    "bayesattack-wordnet-pre":"textattack.attack_recipes.BayesAttackWordNet",
-    "bayesattack-hownet-pre":"textattack.attack_recipes.BayesAttackHowNet",
-    "bayesattack-embedding-pre":"textattack.attack_recipes.BayesAttackEmbedding",
-    "bayesattack-embedding-no-POS-pre":"textattack.attack_recipes.BayesAttackEmbeddingGen",
+    "bayesattack-wordnet-pre":"textattack.attack_recipes.DiscreteBlockBayesAttackWordNet",
+    "bayesattack-hownet-pre":"textattack.attack_recipes.DiscreteBlockBayesAttackHowNet",
+    "bayesattack-embedding-pre":"textattack.attack_recipes.DiscreteBlockBayesAttackEmbedding",
+    "bayesattack-embedding-no-POS-pre":"textattack.attack_recipes.DiscreteBlockBayesAttackEmbeddingGen",
 
-    "bayesattack-wordnet-hyp":"textattack.attack_recipes.BayesAttackWordNetHypothesis",
-    "bayesattack-hownet-hyp":"textattack.attack_recipes.BayesAttackHowNetHypothesis",
-    "bayesattack-embedding-hyp":"textattack.attack_recipes.BayesAttackEmbeddingHypothesis",
-    "bayesattack-embedding-no-POS-hyp":"textattack.attack_recipes.BayesAttackEmbeddingGenHypothesis",
+    "bayesattack-wordnet-hyp":"textattack.attack_recipes.DiscreteBlockBayesAttackWordNetHypothesis",
+    "bayesattack-hownet-hyp":"textattack.attack_recipes.DiscreteBlockBayesAttackHowNetHypothesis",
+    "bayesattack-embedding-hyp":"textattack.attack_recipes.DiscreteBlockBayesAttackEmbeddingHypothesis",
+    "bayesattack-embedding-no-POS-hyp":"textattack.attack_recipes.DiscreteBlockBayesAttackEmbeddingGenHypothesis",
 }
 
 
@@ -273,7 +273,7 @@ class AttackArgs:
     use_sod: bool = False
     dpp_type: str = 'dpp_posterior'
     max_loop: int = 5
-    niter: int = 20
+    fit_iter: int = 1
 
     max_budget_key_type: str = ''
 
@@ -512,10 +512,10 @@ class AttackArgs:
             help="params for bayesattack",
         )
         parser.add_argument(
-            "--niter",
+            "--fit-iter",
             type=int,
             required=False,
-            default=default_obj.niter,
+            default=default_obj.fit_iter,
             help="params for bayesattack",
         )
         # args for LSH-with-attention attack
@@ -852,7 +852,7 @@ class _CommandLineAttackArgs:
                     recipe = eval(
                         f"{ATTACK_RECIPE_NAMES[args.attack_recipe]}.build(model_wrapper, " +\
                             "block_size=args.block_size, batch_size=args.batch_size, update_step=args.update_step, "+\
-                            "max_patience=args.max_patience, post_opt=args.post_opt, use_sod=args.use_sod, dpp_type=args.dpp_type, max_loop=args.max_loop, niter=args.niter)"
+                            "max_patience=args.max_patience, post_opt=args.post_opt, use_sod=args.use_sod, dpp_type=args.dpp_type, max_loop=args.max_loop, fit_iter=args.fit_iter, max_budget_key_type=args.max_budget_key_type)"
                     )
                 else:
                     if args.product_space:

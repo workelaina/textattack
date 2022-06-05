@@ -162,21 +162,21 @@ class Attacker:
         
          ### Save as pkl file ####
         if 'bayes' in self.attack_args.attack_recipe:
-            key = f'{self.attack_args.attack_recipe}_{self.attack_args.block_size}_{self.attack_args.batch_size}_{self.attack_args.update_step}_{self.attack_args.max_patience}_{self.attack_args.post_opt}_{self.attack_args.use_sod}_{self.attack_args.dpp_type}_{self.attack_args.max_loop}_{self.attack_args.niter}_{self.attack_args.max_budget_key_type}'
+            key = f'{self.attack_args.attack_recipe}_{self.attack_args.block_size}_{self.attack_args.batch_size}_{self.attack_args.update_step}_{self.attack_args.max_patience}_{self.attack_args.post_opt}_{self.attack_args.use_sod}_{self.attack_args.dpp_type}_{self.attack_args.max_loop}_{self.attack_args.fit_iter}_{self.attack_args.max_budget_key_type}'
         else:
             key = f'{self.attack_args.attack_recipe}'
         key += f'_{self.attack_args.random_seed}'
         if self.attack_args.product_space:
             key += '_product'
 
-        os.makedirs(f'/home/deokjae/new_query_attack/{self.attack_args.pkl_dir}/{self.attack_args.model}/{key}/', exist_ok=True)
+        os.makedirs(f'{self.attack_args.pkl_dir}/{self.attack_args.model}/{key}/', exist_ok=True)
 
         ct = self.attack_args.sidx
         
         while worklist:
             idx = worklist.popleft()
             try:
-                result = read_pkl(f'/home/deokjae/new_query_attack/{self.attack_args.pkl_dir}/{self.attack_args.model}/{key}/' + f'{ct}.pkl')
+                result = read_pkl(f'{self.attack_args.pkl_dir}/{self.attack_args.model}/{key}/' + f'{ct}.pkl')
             except:
                 try:
                     example, ground_truth_output = self.dataset[idx]
@@ -190,7 +190,7 @@ class Attacker:
                 except Exception as e:
                     raise e
                 setattr(result, 'orig_index', idx)
-                write_pkl(result, f'/home/deokjae/new_query_attack/{self.attack_args.pkl_dir}/{self.attack_args.model}/{key}/' + f'{ct}.pkl')
+                write_pkl(result, f'{self.attack_args.pkl_dir}/{self.attack_args.model}/{key}/' + f'{ct}.pkl')
             if (
                 isinstance(result, SkippedAttackResult) and self.attack_args.attack_n
             ) or (
