@@ -21,11 +21,12 @@ from textattack.attack_results import (
     SkippedAttackResult,
     SuccessfulAttackResult,
 )
-from textattack.shared.utils import logger
+from textattack.shared.utils import logger, write_pkl, read_pkl
 
 from .attack import Attack
 from .attack_args import AttackArgs
 
+import time
 
 class Attacker:
     """Class for running attacks on a dataset with specified parameters. This
@@ -89,7 +90,7 @@ class Attacker:
         # This is to be set if loading from a checkpoint
         self._checkpoint = None
 
-    def _get_worklist(self, start, end, num_examples, shuffle):
+    def _get_worklist(self, start, end, num_examples, shuffle, sidx=0):
         if end - start < num_examples:
             logger.warn(
                 f"Attempting to attack {num_examples} samples when only {end-start} are available."
@@ -97,9 +98,9 @@ class Attacker:
         candidates = list(range(start, end))
         if shuffle:
             random.shuffle(candidates)
-        worklist = collections.deque(candidates[:num_examples])
-        candidates = collections.deque(candidates[num_examples:])
-        assert (len(worklist) + len(candidates)) == (end - start)
+        worklist = collections.deque(candidates[sidx:sidx+num_examples])
+        candidates = collections.deque(candidates[sidx+num_examples:])
+        assert (len(worklist) + len(candidates)) == (end - start - sidx)
         return worklist, candidates
 
     def _attack(self):
@@ -127,6 +128,7 @@ class Attacker:
                     len(self.dataset),
                     self.attack_args.num_successful_examples,
                     self.attack_args.shuffle,
+                    sidx=self.attack_args.sidx,
                 )
             else:
                 num_remaining_attacks = self.attack_args.num_examples
@@ -137,7 +139,9 @@ class Attacker:
                     len(self.dataset),
                     self.attack_args.num_examples,
                     self.attack_args.shuffle,
+                    sidx=self.attack_args.sidx,
                 )
+        textattack.shared.utils.set_seed(self.attack_args.random_seed)
 
         if not self.attack_args.silent:
             print(self.attack, "\n")
@@ -155,19 +159,38 @@ class Attacker:
             num_successes = 0
 
         sample_exhaustion_warned = False
+        
+         ### Save as pkl file ####
+        if 'bayes' in self.attack_args.attack_recipe:
+            key = f'{self.attack_args.attack_recipe}_{self.attack_args.block_size}_{self.attack_args.batch_size}_{self.attack_args.update_step}_{self.attack_args.max_patience}_{self.attack_args.post_opt}_{self.attack_args.use_sod}_{self.attack_args.dpp_type}_{self.attack_args.max_loop}_{self.attack_args.niter}_{self.attack_args.max_budget_key_type}'
+        else:
+            key = f'{self.attack_args.attack_recipe}'
+        key += f'_{self.attack_args.random_seed}'
+        if self.attack_args.product_space:
+            key += '_product'
+
+        os.makedirs(f'/home/deokjae/new_query_attack/{self.attack_args.pkl_dir}/{self.attack_args.model}/{key}/', exist_ok=True)
+
+        ct = self.attack_args.sidx
+        
         while worklist:
             idx = worklist.popleft()
             try:
-                example, ground_truth_output = self.dataset[idx]
-            except IndexError:
-                continue
-            example = textattack.shared.AttackedText(example)
-            if self.dataset.label_names is not None:
-                example.attack_attrs["label_names"] = self.dataset.label_names
-            try:
-                result = self.attack.attack(example, ground_truth_output)
-            except Exception as e:
-                raise e
+                result = read_pkl(f'/home/deokjae/new_query_attack/{self.attack_args.pkl_dir}/{self.attack_args.model}/{key}/' + f'{ct}.pkl')
+            except:
+                try:
+                    example, ground_truth_output = self.dataset[idx]
+                except IndexError:
+                    continue
+                example = textattack.shared.AttackedText(example)
+                if self.dataset.label_names is not None:
+                    example.attack_attrs["label_names"] = self.dataset.label_names
+                try:
+                    result = self.attack.attack(example, ground_truth_output)
+                except Exception as e:
+                    raise e
+                setattr(result, 'orig_index', idx)
+                write_pkl(result, f'/home/deokjae/new_query_attack/{self.attack_args.pkl_dir}/{self.attack_args.model}/{key}/' + f'{ct}.pkl')
             if (
                 isinstance(result, SkippedAttackResult) and self.attack_args.attack_n
             ) or (
@@ -213,7 +236,7 @@ class Attacker:
                 )
                 new_checkpoint.save()
                 self.attack_log_manager.flush()
-
+            ct += 1
         pbar.close()
         print()
         # Enable summary stdout
@@ -247,6 +270,7 @@ class Attacker:
                     len(self.dataset),
                     self.attack_args.num_successful_examples,
                     self.attack_args.shuffle,
+                    sidx=self.attack_args.sidx,
                 )
             else:
                 num_remaining_attacks = self.attack_args.num_examples
@@ -257,7 +281,9 @@ class Attacker:
                     len(self.dataset),
                     self.attack_args.num_examples,
                     self.attack_args.shuffle,
+                    sidx=self.attack_args.sidx,
                 )
+        textattack.shared.utils.set_seed(self.attack_args.random_seed)
 
         in_queue = torch.multiprocessing.Queue()
         out_queue = torch.multiprocessing.Queue()
@@ -408,8 +434,11 @@ class Attacker:
         Returns:
             :obj:`list[AttackResult]` - List of :class:`~textattack.attack_results.AttackResult` obtained after attacking the given dataset..
         """
+        set_tf_growth_mem()
         if self.attack_args.silent:
             logger.setLevel(logging.ERROR)
+            logger2 = logging.getLogger("spacy")
+            logger2.setLevel(logging.ERROR)
 
         if self.attack_args.query_budget:
             self.attack.goal_function.query_budget = self.attack_args.query_budget
@@ -419,7 +448,7 @@ class Attacker:
                 self.attack_args
             )
 
-        textattack.shared.utils.set_seed(self.attack_args.random_seed)
+        textattack.shared.utils.set_seed(self.attack_args.shuffle_seed)
         if self.dataset.shuffled and self.attack_args.checkpoint_interval:
             # Not allowed b/c we cannot recover order of shuffled data
             raise ValueError(
@@ -522,6 +551,28 @@ def pytorch_multiprocessing_workaround():
     except RuntimeError:
         pass
 
+def set_tf_growth_mem():
+    if "CUDA_VISIBLE_DEVICES" not in os.environ:
+        os.environ["CUDA_VISIBLE_DEVICES"] = "0"
+    if "TF_CPP_MIN_LOG_LEVEL" not in os.environ:
+        os.environ["TF_CPP_MIN_LOG_LEVEL"] = "3"
+    
+    try:
+        # Fix TensorFlow GPU memory growth
+        import tensorflow as tf
+
+        gpus = tf.config.experimental.list_physical_devices("GPU")
+        if gpus:
+            try:
+                # Currently, memory growth needs to be the same across GPUs
+                for gpu in gpus:
+                    tf.config.experimental.set_memory_growth(gpu, True)
+            except RuntimeError as e:
+                # Memory growth must be set before GPUs have been initialized
+                print(e)
+    except ModuleNotFoundError:
+        pass
+
 
 def set_env_variables(gpu_id):
     # Disable tensorflow logs, except in the case of an error.
@@ -564,7 +615,7 @@ def attack_from_queue(
 
     gpu_id = (torch.multiprocessing.current_process()._identity[0] - 1) % num_gpus
     set_env_variables(gpu_id)
-    textattack.shared.utils.set_seed(attack_args.random_seed)
+    textattack.shared.utils.set_seed(attack_args.shuffle_seed)
     if torch.multiprocessing.current_process()._identity[0] > 1:
         logging.disable()
 

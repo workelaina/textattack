@@ -32,6 +32,7 @@ class AttackQueries(Metric):
             ]
         )
         self.all_metrics["avg_num_queries"] = self.avg_num_queries()
+        self.all_metrics["num_queries_list"] = self.num_queries
 
         return self.all_metrics
 

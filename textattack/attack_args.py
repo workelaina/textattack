@@ -18,6 +18,9 @@ from .model_args import ModelArgs
 
 ATTACK_RECIPE_NAMES = {
     "alzantot": "textattack.attack_recipes.GeneticAlgorithmAlzantot2018",
+    "alzantot-pre": "textattack.attack_recipes.GeneticAlgorithmAlzantot2018Premise",
+    "alzantot-hyp": "textattack.attack_recipes.GeneticAlgorithmAlzantot2018Hypothesis",
+
     "bae": "textattack.attack_recipes.BAEGarg2019",
     "bert-attack": "textattack.attack_recipes.BERTAttackLi2020",
     "faster-alzantot": "textattack.attack_recipes.FasterGeneticAlgorithmJia2019",
@@ -28,14 +31,63 @@ ATTACK_RECIPE_NAMES = {
     "morpheus": "textattack.attack_recipes.MorpheusTan2020",
     "seq2sick": "textattack.attack_recipes.Seq2SickCheng2018BlackBox",
     "textbugger": "textattack.attack_recipes.TextBuggerLi2018",
+
     "textfooler": "textattack.attack_recipes.TextFoolerJin2019",
+    "textfooler-hownet": "textattack.attack_recipes.TextFoolerJin2019HowNet",
+    "textfooler-pre": "textattack.attack_recipes.TextFoolerJin2019Premise",
+    "textfooler-hyp": "textattack.attack_recipes.TextFoolerJin2019Hypothesis",
+    "textfooler-anal": "textattack.attack_recipes.TextFoolerJinAnal",
+
     "pwws": "textattack.attack_recipes.PWWSRen2019",
+    "pwws-hownet": "textattack.attack_recipes.PWWSRen2019HowNet",
+    "pwws-pre": "textattack.attack_recipes.PWWSRen2019Premise",
+    "pwws-hyp": "textattack.attack_recipes.PWWSRen2019Hypothesis",
+    "pwws-anal": "textattack.attack_recipes.PWWSRenAnal",
+
+
     "iga": "textattack.attack_recipes.IGAWang2019",
     "pruthi": "textattack.attack_recipes.Pruthi2019",
+
     "pso": "textattack.attack_recipes.PSOZang2020",
+    "pso-pre": "textattack.attack_recipes.PSOZang2020Premise",
+    "pso-hyp": "textattack.attack_recipes.PSOZang2020Hypothesis",
+
     "checklist": "textattack.attack_recipes.CheckList2020",
     "clare": "textattack.attack_recipes.CLARE2020",
     "a2t": "textattack.attack_recipes.A2TYoo2021",
+
+    "lsh-with-attention-wordnet":"textattack.attack_recipes.LSHWithAttentionWordNetPremise",
+    "lsh-with-attention-hownet":"textattack.attack_recipes.LSHWithAttentionHowNetPremise",
+    "lsh-with-attention-embedding":"textattack.attack_recipes.LSHWithAttentionEmbeddingPremise",
+    "lsh-with-attention-embedding-no-POS":"textattack.attack_recipes.LSHWithAttentionEmbeddingGenPremise",
+
+
+    "lsh-with-attention-wordnet-pre":"textattack.attack_recipes.LSHWithAttentionWordNetPremise",
+    "lsh-with-attention-hownet-pre":"textattack.attack_recipes.LSHWithAttentionHowNetPremise",
+    "lsh-with-attention-embedding-pre":"textattack.attack_recipes.LSHWithAttentionEmbeddingPremise",
+    "lsh-with-attention-embedding-no-POS-pre":"textattack.attack_recipes.LSHWithAttentionEmbeddingGenPremise",
+
+    "lsh-with-attention-wordnet-hyp":"textattack.attack_recipes.LSHWithAttentionWordNetHypothesis",
+    "lsh-with-attention-hownet-hyp":"textattack.attack_recipes.LSHWithAttentionHowNetHypothesis",
+    "lsh-with-attention-embedding-hyp":"textattack.attack_recipes.LSHWithAttentionEmbeddingHypothesis",
+    "lsh-with-attention-embedding-no-POS-hyp":"textattack.attack_recipes.LSHWithAttentionEmbeddingGenHypothesis",
+
+    "bayesattack-wordnet":"textattack.attack_recipes.BayesAttackWordNet",
+    "bayesattack-hownet":"textattack.attack_recipes.BayesAttackHowNet",
+    "bayesattack-embedding":"textattack.attack_recipes.BayesAttackEmbedding",
+    "bayesattack-embedding-no-POS":"textattack.attack_recipes.BayesAttackEmbeddingGen",
+    "bayesattack-bae":"textattack.attack_recipes.BayesAttackBAE",
+    "bayesattack-bert-attack":"textattack.attack_recipes.BayesAttackBERTAttack",
+
+    "bayesattack-wordnet-pre":"textattack.attack_recipes.BayesAttackWordNet",
+    "bayesattack-hownet-pre":"textattack.attack_recipes.BayesAttackHowNet",
+    "bayesattack-embedding-pre":"textattack.attack_recipes.BayesAttackEmbedding",
+    "bayesattack-embedding-no-POS-pre":"textattack.attack_recipes.BayesAttackEmbeddingGen",
+
+    "bayesattack-wordnet-hyp":"textattack.attack_recipes.BayesAttackWordNetHypothesis",
+    "bayesattack-hownet-hyp":"textattack.attack_recipes.BayesAttackHowNetHypothesis",
+    "bayesattack-embedding-hyp":"textattack.attack_recipes.BayesAttackEmbeddingHypothesis",
+    "bayesattack-embedding-no-POS-hyp":"textattack.attack_recipes.BayesAttackEmbeddingGenHypothesis",
 }
 
 
@@ -206,6 +258,24 @@ class AttackArgs:
     disable_stdout: bool = False
     silent: bool = False
     enable_advance_metrics: bool = False
+    
+    pkl_dir: str = 'default'
+    sidx: int = 0
+    shuffle_seed: int = 0
+    attention_model_path: str = '' # for LSH
+    product_space: bool = False
+
+    block_size: int = 40
+    batch_size: int = 4
+    update_step: int = 1
+    max_patience: int = 50
+    post_opt: str = 'v3'
+    use_sod: bool = False
+    dpp_type: str = 'dpp_posterior'
+    max_loop: int = 5
+    niter: int = 20
+
+    max_budget_key_type: str = ''
 
     def __post_init__(self):
         if self.num_successful_examples:
@@ -371,7 +441,114 @@ class AttackArgs:
             default=default_obj.enable_advance_metrics,
             help="Enable calculation and display of optional advance post-hoc metrics like perplexity, USE distance, etc.",
         )
+        parser.add_argument(
+            "--pkl-dir",
+            type=str,
+            required=False,
+            default='default',
+            help="root of pkls",
+        )
+        parser.add_argument(
+            "--sidx",
+            type=int,
+            required=False,
+            default=0,
+            help="start index of dataset.",
+        )
+        # args for BAYESATTACK
+        parser.add_argument(
+            "--block-size",
+            type=int,
+            required=False,
+            default=default_obj.block_size,
+            help="params for bayesattack",
+        )
+        parser.add_argument(
+            "--batch-size",
+            type=int,
+            required=False,
+            default=default_obj.batch_size,
+            help="params for bayesattack",
+        )
+        parser.add_argument(
+            "--update-step",
+            type=int,
+            required=False,
+            default=default_obj.update_step,
+            help="params for bayesattack",
+        )
+        parser.add_argument(
+            "--max-patience",
+            type=int,
+            required=False,
+            default=default_obj.max_patience,
+            help="params for bayesattack",
+        )
+        parser.add_argument(
+            "--post-opt",
+            type=str,
+            required=False,
+            default=default_obj.post_opt,
+            help="params for bayesattack",
+        )
+        parser.add_argument(
+            "--use-sod",
+            action="store_true",
+            default=False,
+            help="If `True` Use combination of initial word candidates as search space.",
+        )
+        parser.add_argument(
+            "--dpp-type",
+            type=str,
+            required=False,
+            default=default_obj.dpp_type,
+            help="params for bayesattack",
+        )
+        parser.add_argument(
+            "--max-loop",
+            type=int,
+            required=False,
+            default=default_obj.max_loop,
+            help="params for bayesattack",
+        )
+        parser.add_argument(
+            "--niter",
+            type=int,
+            required=False,
+            default=default_obj.niter,
+            help="params for bayesattack",
+        )
+        # args for LSH-with-attention attack
+        parser.add_argument(
+            "--attention-model-path",
+            type=str,
+            required=False,
+            default='',
+            help="path to attention model",
+        )
 
+        # args for random seed correspond to text shuffling.
+        parser.add_argument(
+            "--shuffle-seed",
+            default=0,
+            type=int,
+            help="Random seed for shuffle.",
+        )
+
+        # args for using product space or not. 
+        parser.add_argument(
+            "--product-space",
+            action="store_true",
+            default=False,
+            help="If `True` Use combination of initial word candidates as search space.",
+        )
+        parser.add_argument(
+            "--max-budget-key-type",
+            type=str,
+            required=False,
+            default=default_obj.max_budget_key_type,
+            help="load path for query budget of each examples",
+        )
         return parser
 
     @classmethod
@@ -478,8 +655,8 @@ class _CommandLineAttackArgs:
     interactive: bool = False
     parallel: bool = False
     model_batch_size: int = 32
-    model_cache_size: int = 2**18
-    constraint_cache_size: int = 2**18
+    model_cache_size: int = 2 ** 18
+    constraint_cache_size: int = 2 ** 18
 
     @classmethod
     def _add_parser_args(cls, parser):
@@ -671,9 +848,31 @@ class _CommandLineAttackArgs:
                     f"{ATTACK_RECIPE_NAMES[recipe_name]}.build(model_wrapper, {params})"
                 )
             elif args.attack_recipe in ATTACK_RECIPE_NAMES:
-                recipe = eval(
-                    f"{ATTACK_RECIPE_NAMES[args.attack_recipe]}.build(model_wrapper)"
-                )
+                if 'bayes' in args.attack_recipe:
+                    recipe = eval(
+                        f"{ATTACK_RECIPE_NAMES[args.attack_recipe]}.build(model_wrapper, " +\
+                            "block_size=args.block_size, batch_size=args.batch_size, update_step=args.update_step, "+\
+                            "max_patience=args.max_patience, post_opt=args.post_opt, use_sod=args.use_sod, dpp_type=args.dpp_type, max_loop=args.max_loop, niter=args.niter)"
+                    )
+                else:
+                    if args.product_space:
+                        if 'lsh' in args.attack_recipe:
+                            recipe = eval(
+                                f"{ATTACK_RECIPE_NAMES[args.attack_recipe]}.build(model_wrapper, args.attention_model_path, product=True)"
+                            )
+                        else:
+                            recipe = eval(
+                                f"{ATTACK_RECIPE_NAMES[args.attack_recipe]}.build(model_wrapper, product=True)"
+                            )
+                    else:
+                        if 'lsh' in args.attack_recipe:
+                            recipe = eval(
+                                f"{ATTACK_RECIPE_NAMES[args.attack_recipe]}.build(model_wrapper, args.attention_model_path)"
+                            )
+                        else:
+                            recipe = eval(
+                                f"{ATTACK_RECIPE_NAMES[args.attack_recipe]}.build(model_wrapper)"
+                            )
             else:
                 raise ValueError(f"Invalid recipe {args.attack_recipe}")
             if args.query_budget:

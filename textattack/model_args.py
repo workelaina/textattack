@@ -284,7 +284,7 @@ class ModelArgs:
                     or model_class == "WordCNNForClassification"
                 ):
                     model = eval(
-                        f"textattack.models.helpers.{model_class}.from_pretrained({args.model})"
+                        f"textattack.models.helpers.{model_class}.from_pretrained('{args.model}')"
                     )
                     model = textattack.models.wrappers.PyTorchModelWrapper(
                         model, model.tokenizer

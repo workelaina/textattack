@@ -36,7 +36,7 @@ class BAEGarg2019(AttackRecipe):
     """
 
     @staticmethod
-    def build(model_wrapper):
+    def build(model_wrapper, product=False):
         # "In this paper, we present a simple yet novel technique: BAE (BERT-based
         # Adversarial Examples), which uses a language model (LM) for token
         # replacement to best fit the overall context. We perturb an input sentence
@@ -118,6 +118,6 @@ class BAEGarg2019(AttackRecipe):
         # • "If no token causes misclassification, we choose the perturbation that
         # decreases the prediction probability P(C(Sadv)=y) the most."
         #
-        search_method = GreedyWordSwapWIR(wir_method="delete")
+        search_method = GreedyWordSwapWIR(wir_method="delete", product=product)
 
         return BAEGarg2019(goal_function, constraints, transformation, search_method)

@@ -14,13 +14,18 @@ https://github.com/jind11/TextFooler.
 import numpy as np
 import torch
 from torch.nn.functional import softmax
+import random
 
 from textattack.goal_function_results import GoalFunctionResultStatus
 from textattack.search_methods import SearchMethod
 from textattack.shared.validators import (
     transformation_consists_of_word_swaps_and_deletions,
 )
-
+from textattack.attention_models.han import HAN
+from textattack.attention_models.utils import *
+from textattack.attention_models.dan_snli import NLIAttentionPredictions
+from textattack.constraints.semantics.sentence_encoders import UniversalSentenceEncoder
+use = UniversalSentenceEncoder()
 
 class GreedyWordSwapWIR(SearchMethod):
     """An attack that greedily chooses from a list of possible perturbations in
@@ -31,28 +36,150 @@ class GreedyWordSwapWIR(SearchMethod):
         model_wrapper: model wrapper used for gradient-based ranking
     """
 
-    def __init__(self, wir_method="unk", unk_token="[UNK]"):
+    def __init__(self, wir_method="unk", attention_model_path=None, product=False):
         self.wir_method = wir_method
-        self.unk_token = unk_token
+        self.attention_model_path = attention_model_path
+        if self.attention_model_path == "mnli":
+            self.nli_preds = NLIAttentionPredictions()
+        self.product = product
+
+    def precompute_candid_words(self, initial_text):
+        print("Precompute Word candidates for product space.")
+        len_text = len(initial_text.words)
+        self.word_candids = [[] for i in range(len_text)]
+        for idx in range(len_text):
+            transformed_text_candidates = self.get_transformations(
+                initial_text,
+                original_text=initial_text,
+                indices_to_modify=[idx],
+            )
+            self.word_candids[idx].append(initial_text.words[idx])
+            for text in transformed_text_candidates:
+                self.word_candids[idx].append(text.words[idx])
+    
+    def compute_candids_by_precomputed_candid_words(self, target_text, idx):
+        candidates = []
+        cur_word = target_text.words[idx]
+        for word in self.word_candids[idx]:
+            if cur_word == word:
+                continue
+            new_text = target_text.replace_words_at_indices([idx], [word])                
+            candidates.append(new_text)
+        return candidates
 
     def _get_index_order(self, initial_text):
         """Returns word indices of ``initial_text`` in descending order of
         importance."""
         len_text = len(initial_text.words)
 
+        if self.product:
+            self.precompute_candid_words(initial_text)
+
+
         if self.wir_method == "unk":
             leave_one_texts = [
-                initial_text.replace_word_at_index(i, self.unk_token)
-                for i in range(len_text)
+                initial_text.replace_word_at_index(i, "[UNK]") for i in range(len_text)
             ]
             leave_one_results, search_over = self.get_goal_results(leave_one_texts)
             index_scores = np.array([result.score for result in leave_one_results])
+        elif self.wir_method == "lsh_with_attention":
 
+          # The implementation of Attention + LSH Ranking step  (https://arxiv.org/abs/2109.04775)
+            if self.attention_model_path != "mnli":
+
+                #Load Hierarchical Attention Network (HAN) for classification task
+                han = HAN(path=self.attention_model_path)
+                doc, score, word_alpha, sentence_alphas = han.classify(" ".join(initial_text.words[:1000]))
+                scrs = []
+                stop_words = stop_word_set()
+                word_alpha = word_alpha.detach().cpu().numpy()
+                for i in range(len(word_alpha)):
+                    for j in range(len(word_alpha[i])):
+                        if doc[i][j] not in stop_words and len(doc[i][j]) > 2:
+                            scrs.append(word_alpha[i][j])
+                        else:
+                            scrs.append(-101.0)
+                for i in range(len(scrs), len(initial_text.words)):
+                    scrs.append(-101.0)
+
+            elif self.attention_model_path == "mnli":
+
+               # Load Decompose Attention Model (DA) for entailment task
+
+                len_premise = len(initial_text.words_per_input[0])
+
+                premise = " ".join(initial_text.words_per_input[0])
+                hypothesis = " ".join(initial_text.words_per_input[1])
+                scrs = []
+
+                hypothesis_scores = self.nli_preds.get_predictions(premise, hypothesis)
+
+                for i in range(len_text):
+                    if i < len_premise:
+                        scrs.append(-101.0)
+                    else:
+                        scrs.append(hypothesis_scores[i - len_premise][0])
+
+            scrs = np.asarray(scrs)
+            index_scores = scrs
+            search_over = False
+            saliency_scores = np.array([result for result in scrs])
+            softmax_saliency_scores = softmax(
+                torch.Tensor(saliency_scores), dim=0
+            ).numpy()
+
+            #Scores due to attention model
+            index_scores = softmax_saliency_scores
+            delta_ps = []
+
+            # LSH step
+            # Substitute each word with all candidates from the search space
+            for idx in range(len_text):
+                transformed_text_candidates = self.get_transformations(
+                    initial_text,
+                    original_text=initial_text,
+                    indices_to_modify=[idx],
+                )
+                if not transformed_text_candidates:
+                    delta_ps.append(0.0)
+                    continue
+                text_to_encode = []
+                idx_to_txt = {}
+                k=0
+
+                for txt in transformed_text_candidates:
+                    idx_to_txt[str(k)] = txt
+                    res = txt.text_window_around_index(idx,10)
+                    text_to_encode.append(res)
+                    k+=1
+
+                # Encode all the generates input texts using sentence encoder
+                embeddings = use.encode(text_to_encode)
+
+                lsh = LSH(512) #dimension size of USE embeddings is 512
+
+                for t in range(len(embeddings)):
+                    lsh.add(embeddings[t],str(t))
+                table = lsh.get_result()
+                transformed_text_candidates = []
+
+                #Get a random candidate from each bucket
+                for key,value in table.table.items():
+                    val = random.choice(value)
+                    transformed_text_candidates.append(idx_to_txt[val])
+
+                #The final candidate is the one which causes the maximum change in
+                #target model's confidence score
+                swap_results, _ = self.get_goal_results(transformed_text_candidates)
+                score_change = [result.score for result in swap_results]
+                max_score_change = np.max(score_change)
+                delta_ps.append(max_score_change)
+            
+            index_scores = (softmax_saliency_scores) * (delta_ps)   
         elif self.wir_method == "weighted-saliency":
             # first, compute word saliency
             leave_one_texts = [
-                initial_text.replace_word_at_index(i, self.unk_token)
-                for i in range(len_text)
+                initial_text.replace_word_at_index(i, "[UNK]") for i in range(len_text)
             ]
             leave_one_results, search_over = self.get_goal_results(leave_one_texts)
             saliency_scores = np.array([result.score for result in leave_one_results])
@@ -116,6 +243,14 @@ class GreedyWordSwapWIR(SearchMethod):
         if self.wir_method != "random":
             index_order = (-index_scores).argsort()
 
+        # Max Budget assuming product space
+        self.trans_num_list = []
+        for i in range(len_text):
+            self.trans_num_list.append(len(self.get_transformations(
+                                    initial_text,
+                                    original_text=initial_text,
+                                    indices_to_modify=[i],
+                                )))
         return index_order, search_over
 
     def perform_search(self, initial_result):
@@ -128,11 +263,14 @@ class GreedyWordSwapWIR(SearchMethod):
         cur_result = initial_result
         results = None
         while i < len(index_order) and not search_over:
-            transformed_text_candidates = self.get_transformations(
-                cur_result.attacked_text,
-                original_text=initial_result.attacked_text,
-                indices_to_modify=[index_order[i]],
-            )
+            if self.product:
+                transformed_text_candidates = self.compute_candids_by_precomputed_candid_words(cur_result.attacked_text, index_order[i])
+            else:
+                transformed_text_candidates = self.get_transformations(
+                    cur_result.attacked_text,
+                    original_text=initial_result.attacked_text,
+                    indices_to_modify=[index_order[i]],
+                )
             i += 1
             if len(transformed_text_candidates) == 0:
                 continue
@@ -164,7 +302,6 @@ class GreedyWordSwapWIR(SearchMethod):
                         max_similarity = similarity_score
                         best_result = result
                 return best_result
-
         return cur_result
 
     def check_transformation_compatibility(self, transformation):

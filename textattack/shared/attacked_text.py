@@ -40,7 +40,8 @@ class AttackedText:
            during the course of an attack.
     """
 
-    SPLIT_TOKEN = "<SPLIT>"
+    #SPLIT_TOKEN = "<SPLIT>"
+    SPLIT_TOKEN = "<______>" # fix error in question-answering dataset exps.
 
     def __init__(self, text_input, attack_attrs=None):
         # Read in ``text_input`` as a string or OrderedDict.

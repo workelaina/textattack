@@ -141,11 +141,14 @@ class GloveTokenizer(WordLevelTokenizer):
         case, raise an error.
         """
         if isinstance(text_input, tuple):
-            if len(text_input) > 1:
+            if len(text_input) == 1:
+                text_input = text_input[0]
+            elif len(text_input) == 2:
+                text_input = text_input[0] + text_input[1]
+            elif len(text_input) > 2:
                 raise ValueError(
                     "Cannot use `GloveTokenizer` to encode multiple inputs"
                 )
-            text_input = text_input[0]
         return text_input
 
     def encode(self, text):

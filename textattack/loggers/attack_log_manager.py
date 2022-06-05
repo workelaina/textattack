@@ -151,3 +151,10 @@ class AttackLogManager:
                 title="Num Words Perturbed",
                 window_id="num_words_perturbed",
             )
+            
+        if self.enable_advance_metrics:
+            return attack_success_stats["attack_success_rate"], words_perturbed_stats["avg_word_perturbed_perc"], attack_query_stats["avg_num_queries"], \
+                perplexity_stats["avg_attack_perplexity"], use_stats["avg_attack_use_score"], attack_query_stats["num_queries_list"], attack_success_stats["bool_vec"]
+        else:
+            return attack_success_stats["attack_success_rate"], words_perturbed_stats["avg_word_perturbed_perc"], attack_query_stats["avg_num_queries"], \
+                -1,-1, attack_query_stats["num_queries_list"], attack_success_stats["bool_vec"]

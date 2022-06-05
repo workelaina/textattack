@@ -17,7 +17,6 @@ TextAttack supports the following attack recipes (each recipe's documentation co
 
 .. contents:: :local:
 """
-
 from .attack_recipe import AttackRecipe
 
 from .a2t_yoo_2021 import A2TYoo2021
@@ -32,12 +31,31 @@ from .kuleshov_2017 import Kuleshov2017
 from .morpheus_tan_2020 import MorpheusTan2020
 from .seq2sick_cheng_2018_blackbox import Seq2SickCheng2018BlackBox
 from .textbugger_li_2018 import TextBuggerLi2018
-from .textfooler_jin_2019 import TextFoolerJin2019
-from .pwws_ren_2019 import PWWSRen2019
+from .textfooler_jin_2019 import TextFoolerJin2019, TextFoolerJin2019Hypothesis, TextFoolerJin2019Premise, TextFoolerJin2019HowNet
+from .pwws_ren_2019 import PWWSRen2019, PWWSRen2019Hypothesis, PWWSRen2019Premise, PWWSRen2019HowNet
 from .iga_wang_2019 import IGAWang2019
 from .pruthi_2019 import Pruthi2019
-from .pso_zang_2020 import PSOZang2020
+from .pso_zang_2020 import PSOZang2020, PSOZang2020Hypothesis, PSOZang2020Premise
 from .checklist_ribeiro_2020 import CheckList2020
 from .clare_li_2020 import CLARE2020
 from .french_recipe import FrenchRecipe
 from .spanish_recipe import SpanishRecipe
+from .lsh_with_attention_maheshwary_2021 import LSHWithAttentionWordNetPremise
+from .lsh_with_attention_maheshwary_2021 import LSHWithAttentionHowNetPremise
+from .lsh_with_attention_maheshwary_2021 import LSHWithAttentionEmbeddingPremise
+from .lsh_with_attention_maheshwary_2021 import LSHWithAttentionEmbeddingGenPremise
+from .lsh_with_attention_maheshwary_2021 import LSHWithAttentionWordNetHypothesis
+from .lsh_with_attention_maheshwary_2021 import LSHWithAttentionHowNetHypothesis
+from .lsh_with_attention_maheshwary_2021 import LSHWithAttentionEmbeddingHypothesis
+from .lsh_with_attention_maheshwary_2021 import LSHWithAttentionEmbeddingGenHypothesis
+from .block_bayes_attack_2022 import DiscreteBlockBayesAttackWordNet
+from .block_bayes_attack_2022 import DiscreteBlockBayesAttackHowNet
+from .block_bayes_attack_2022 import DiscreteBlockBayesAttackEmbedding
+from .block_bayes_attack_2022 import DiscreteBlockBayesAttackEmbeddingGen
+from .block_bayes_attack_2022 import DiscreteBlockBayesAttackWordNetHypothesis
+from .block_bayes_attack_2022 import DiscreteBlockBayesAttackHowNetHypothesis
+from .block_bayes_attack_2022 import DiscreteBlockBayesAttackEmbeddingHypothesis
+from .block_bayes_attack_2022 import DiscreteBlockBayesAttackEmbeddingGenHypothesis
+
+from .block_bayes_attack_2022 import DiscreteBlockBayesAttackBAE
+from .block_bayes_attack_2022 import DiscreteBlockBayesAttackBERTAttack

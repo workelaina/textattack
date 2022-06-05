@@ -39,7 +39,7 @@ class ParticleSwarmOptimization(PopulationBasedSearch):
     """
 
     def __init__(
-        self, pop_size=60, max_iters=20, post_turn_check=True, max_turn_retries=20
+        self, pop_size=60, max_iters=20, post_turn_check=True, max_turn_retries=20, product=False,
     ):
         self.max_iters = max_iters
         self.pop_size = pop_size
@@ -52,6 +52,38 @@ class ParticleSwarmOptimization(PopulationBasedSearch):
         self.c1_origin = 0.8
         self.c2_origin = 0.2
         self.v_max = 3.0
+
+        self.product = product
+
+    def precompute_candid_words(self, initial_text):
+        print("Precompute Word candidates for product space.")
+        len_text = len(initial_text.words)
+        self.word_candids = [[] for i in range(len_text)]
+        for idx in range(len_text):
+            transformed_text_candidates = self.get_transformations(
+                initial_text,
+                original_text=initial_text,
+                indices_to_modify=[idx],
+            )
+            self.word_candids[idx].append(initial_text.words[idx])
+            for text in transformed_text_candidates:
+                self.word_candids[idx].append(text.words[idx])
+    
+    def compute_candids_by_precomputed_candid_words(self, target_text, idx):
+        candidates = []
+        cur_word = target_text.words[idx]
+        for word in self.word_candids[idx]:
+            if cur_word == word:
+                continue
+            new_text = target_text.replace_words_at_indices([idx], [word])                
+            candidates.append(new_text)
+        return candidates
+    
+    def compute_all_candids_by_precomputed_candid_words(self, target_text):
+        candidates = []
+        for idx in range(len(self.word_candids)):
+            candidates += self.compute_candids_by_precomputed_candid_words(target_text, idx)
+        return candidates
 
     def _perturb(self, pop_member, original_result):
         """Perturb `pop_member` in-place.
@@ -157,9 +189,12 @@ class ParticleSwarmOptimization(PopulationBasedSearch):
         """
         current_text = current_result.attacked_text
         neighbors_list = [[] for _ in range(len(current_text.words))]
-        transformed_texts = self.get_transformations(
-            current_text, original_text=original_result.attacked_text
-        )
+        if self.product:
+            transformed_texts = self.compute_all_candids_by_precomputed_candid_words(current_text)
+        else:
+            transformed_texts = self.get_transformations(
+                current_text, original_text=original_result.attacked_text
+            )
         for transformed_text in transformed_texts:
             diff_idx = next(
                 iter(transformed_text.attack_attrs["newly_modified_indices"])
@@ -213,8 +248,15 @@ class ParticleSwarmOptimization(PopulationBasedSearch):
         return population
 
     def perform_search(self, initial_result):
+        if self.product:
+            self.precompute_candid_words(initial_result.attacked_text)
+            
+
         self._search_over = False
+
+        prev_budget = self.goal_function.num_queries
         population = self._initialize_population(initial_result, self.pop_size)
+        budget_one_traversal = self.goal_function.num_queries - prev_budget
         # Initialize  up velocities of each word for each population
         v_init = np.random.uniform(-self.v_max, self.v_max, self.pop_size)
         velocities = np.array(
@@ -228,7 +270,7 @@ class ParticleSwarmOptimization(PopulationBasedSearch):
         if (
             self._search_over
             or global_elite.result.goal_status == GoalFunctionResultStatus.SUCCEEDED
-        ):
+        ):  
             return global_elite.result
 
         local_elites = copy.copy(population)
@@ -321,7 +363,6 @@ class ParticleSwarmOptimization(PopulationBasedSearch):
 
             if top_member.score > global_elite.score:
                 global_elite = copy.copy(top_member)
-
         return global_elite.result
 
     def check_transformation_compatibility(self, transformation):

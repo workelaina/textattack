@@ -39,7 +39,7 @@ class PSOZang2020(AttackRecipe):
     """
 
     @staticmethod
-    def build(model_wrapper):
+    def build(model_wrapper, product=False):
         #
         # Swap words with their synonyms extracted based on the HowNet.
         #
@@ -64,6 +64,43 @@ class PSOZang2020(AttackRecipe):
         #
         # Perform word substitution with a Particle Swarm Optimization (PSO) algorithm.
         #
-        search_method = ParticleSwarmOptimization(pop_size=60, max_iters=20)
+        search_method = ParticleSwarmOptimization(pop_size=60, max_iters=20, product=product)
+
+        return Attack(goal_function, constraints, transformation, search_method)
+
+# same with original recipe.
+class PSOZang2020Premise(AttackRecipe):
+    @staticmethod
+    def build(model_wrapper, product=False):
+        transformation = WordSwapHowNet()
+        constraints = [RepeatModification(), StopwordModification()]
+        input_column_modification = InputColumnModification(
+            ["premise", "hypothesis"], {"premise"}
+        )
+        constraints.append(input_column_modification)
+        input_column_modification = InputColumnModification(
+            ["question", "sentence"], {"question"}
+        )
+        constraints.append(input_column_modification)
+        goal_function = UntargetedClassification(model_wrapper)
+        search_method = ParticleSwarmOptimization(pop_size=60, max_iters=20, product=product)
+
+        return Attack(goal_function, constraints, transformation, search_method)
+
+class PSOZang2020Hypothesis(AttackRecipe):
+    @staticmethod
+    def build(model_wrapper, product=False):
+        transformation = WordSwapHowNet()
+        constraints = [RepeatModification(), StopwordModification()]
+        input_column_modification = InputColumnModification(
+            ["premise", "hypothesis"], {"hypothesis"}
+        )
+        constraints.append(input_column_modification)
+        input_column_modification = InputColumnModification(
+            ["question", "sentence"], {"sentence"}
+        )
+        constraints.append(input_column_modification)
+        goal_function = UntargetedClassification(model_wrapper)
+        search_method = ParticleSwarmOptimization(pop_size=60, max_iters=20, product=product)
 
         return Attack(goal_function, constraints, transformation, search_method)

@@ -7,7 +7,7 @@ Metrics on AttackSuccessRate
 
 from textattack.attack_results import FailedAttackResult, SkippedAttackResult
 from textattack.metrics import Metric
-
+import numpy as np
 
 class AttackSuccessRate(Metric):
     def __init__(self):
@@ -28,14 +28,17 @@ class AttackSuccessRate(Metric):
         self.results = results
         self.total_attacks = len(self.results)
 
+        bv = []
         for i, result in enumerate(self.results):
             if isinstance(result, FailedAttackResult):
                 self.failed_attacks += 1
+                bv.append(0)
                 continue
             elif isinstance(result, SkippedAttackResult):
                 self.skipped_attacks += 1
                 continue
             else:
+                bv.append(1)
                 self.successful_attacks += 1
 
         # Calculated numbers
@@ -48,6 +51,7 @@ class AttackSuccessRate(Metric):
         self.all_metrics["attack_accuracy_perc"] = self.attack_accuracy_perc()
         self.all_metrics["attack_success_rate"] = self.attack_success_rate_perc()
 
+        self.all_metrics["bool_vec"] = np.array(bv)
         return self.all_metrics
 
     def original_accuracy_perc(self):
