@@ -63,6 +63,7 @@ class BlackBoxModel():
         self.len_seq = len(self.x0.words)
         self.word_substitution_cache = [[] for _ in range(self.len_seq)]
         for ind in range(self.len_seq):
+            print(ind, self.len_seq)
             transformed_texts = self.transformer(self.x0, original_text=self.x0, indices_to_modify=[ind])
             self.word_substitution_cache[ind].append(self.x0.words[ind])
             for txt in transformed_texts:
@@ -194,7 +195,7 @@ class DiscreteBlockBayesAttack(SearchMethod):
         n_vertices = BBM.n_vertices
 
         query_budget = get_query_budget(x0, BBM.word_substitution_cache, baseline=self.max_budget_key_type)
-        if query_budget == 0:
+        if query_budget <= 1:
             att_result = initial_result
             attack_logs = None
         else:
@@ -222,6 +223,7 @@ class DiscreteBlockBayesAttack(SearchMethod):
         elapsed_time = time.time() - init_time
         setattr(att_result, 'elapsed_time', elapsed_time)
         setattr(att_result, 'attack_logs', attack_logs)
+        setattr(att_result, 'query_budget', query_budget)
         return att_result
     
         

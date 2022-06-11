@@ -25,6 +25,7 @@ from textattack.attention_models.han import HAN
 from textattack.attention_models.utils import *
 from textattack.attention_models.dan_snli import NLIAttentionPredictions
 from textattack.constraints.semantics.sentence_encoders import UniversalSentenceEncoder
+import time
 use = UniversalSentenceEncoder()
 
 class GreedyWordSwapWIR(SearchMethod):
@@ -254,6 +255,7 @@ class GreedyWordSwapWIR(SearchMethod):
         return index_order, search_over
 
     def perform_search(self, initial_result):
+        init_time = time.time()
         attacked_text = initial_result.attacked_text
 
         # Sort words by order of importance
@@ -301,7 +303,9 @@ class GreedyWordSwapWIR(SearchMethod):
                     if similarity_score > max_similarity:
                         max_similarity = similarity_score
                         best_result = result
+                setattr(best_result,'elapsed_time',time.time()-init_time)
                 return best_result
+        setattr(cur_result,'elapsed_time',time.time()-init_time)
         return cur_result
 
     def check_transformation_compatibility(self, transformation):

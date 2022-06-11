@@ -169,14 +169,18 @@ class Attacker:
         if self.attack_args.product_space:
             key += '_product'
 
-        os.makedirs(f'{self.attack_args.pkl_dir}/{self.attack_args.model}/{key}/', exist_ok=True)
+        if 'pretrained_models' in self.attack_args.model:
+            model_key = self.attack_args.model.split('/')[1]
+        else:
+            model_key = self.attack_args.model
+        os.makedirs(f'{self.attack_args.pkl_dir}/{model_key}/{key}/', exist_ok=True)
 
         ct = self.attack_args.sidx
         
         while worklist:
             idx = worklist.popleft()
             try:
-                result = read_pkl(f'{self.attack_args.pkl_dir}/{self.attack_args.model}/{key}/' + f'{ct}.pkl')
+                result = read_pkl(f'{self.attack_args.pkl_dir}/{model_key}/{key}/' + f'{ct}.pkl')
             except:
                 try:
                     example, ground_truth_output = self.dataset[idx]
@@ -190,7 +194,7 @@ class Attacker:
                 except Exception as e:
                     raise e
                 setattr(result, 'orig_index', idx)
-                write_pkl(result, f'{self.attack_args.pkl_dir}/{self.attack_args.model}/{key}/' + f'{ct}.pkl')
+                write_pkl(result, f'{self.attack_args.pkl_dir}/{model_key}/{key}/' + f'{ct}.pkl')
             if (
                 isinstance(result, SkippedAttackResult) and self.attack_args.attack_n
             ) or (
