@@ -14,19 +14,19 @@ from copy import deepcopy
 import gc
 
 import sys, os
-#sys.path.append(os.path.dirname(os.path.abspath(os.path.dirname(os.path.abspath(os.path.dirname(__file__))))))
 sys.path.append('../')
 from algorithms import BlockBayesAttack
 import time
+from textattack.shared.utils import read_pkl
 
 def get_query_budget(x, word_substitution_cache, baseline='textfooler'):
     '''
         input
             x : attacked_text
             syndict : synonym dictionary
-            baseline : one of ['textfooler','pso','pwws','bae','bert-attack']
+            baseline : one of ['textfooler','pso','pwws','bae']
     '''
-    assert baseline in ['textfooler','pso','pwws','bae','bert-attack'], f"max-budget-key-type {baseline} is not in ['textfooler','pso','pwws','bae','bert-attack']"
+    assert baseline in ['textfooler','pso','pwws','bae'], f"max-budget-key-type {baseline} is not in ['textfooler','pso','pwws','bae']"
     if baseline == 'pso':
         query_budget = float('inf')
     else:
@@ -34,13 +34,13 @@ def get_query_budget(x, word_substitution_cache, baseline='textfooler'):
         for ind in range(len(x.words)):
             candids = word_substitution_cache[ind]
             query_budget_count.append(len(candids))
-        if baseline in ['textfooler','bae','bert-attack']:
+        if baseline in ['textfooler','bae']:
             query_budget = len(query_budget_count) # queries for importance calculation
             query_budget += sum([qc-1 for qc in query_budget_count]) # max queries for search
         elif baseline == 'pwws':
             query_budget = sum([qc-1 for qc in query_budget_count]) # queries for importance calculation
             query_budget += sum([qc-1 for qc in query_budget_count]) # max queries for search
-    print("max query budget : ",query_budget)
+    print("max query budget : ", query_budget)
     return query_budget
 
 class BlackBoxModel():
@@ -63,7 +63,6 @@ class BlackBoxModel():
         self.len_seq = len(self.x0.words)
         self.word_substitution_cache = [[] for _ in range(self.len_seq)]
         for ind in range(self.len_seq):
-            print(ind, self.len_seq)
             transformed_texts = self.transformer(self.x0, original_text=self.x0, indices_to_modify=[ind])
             self.word_substitution_cache[ind].append(self.x0.words[ind])
             for txt in transformed_texts:
@@ -167,7 +166,7 @@ class DiscreteBlockBayesAttack(SearchMethod):
     """An attack based on Bayesian Optimization
 
     Args:
-        dpp_type : dpp type. one of ['no','dpp_posterior]
+        dpp_type : dpp type. one of ['no','dpp_posterior']
     """
 
     def __init__(self, block_size=40, batch_size=4, update_step=1, max_patience=50, post_opt='v3', use_sod=True, dpp_type='dpp_posterior', max_loop=5, fit_iter=1, max_budget_key_type=''):
@@ -194,7 +193,10 @@ class DiscreteBlockBayesAttack(SearchMethod):
         BBM.set_x(x0)
         n_vertices = BBM.n_vertices
 
-        query_budget = get_query_budget(x0, BBM.word_substitution_cache, baseline=self.max_budget_key_type)
+        if self.max_budget_key_type == 'lsh':
+            query_budget = read_pkl(self.max_budget_path)[self.example_index]
+        else:
+            query_budget = get_query_budget(x0, BBM.word_substitution_cache, baseline=self.max_budget_key_type)
         if query_budget <= 1:
             att_result = initial_result
             attack_logs = None

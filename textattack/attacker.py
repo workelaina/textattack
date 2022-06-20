@@ -190,6 +190,11 @@ class Attacker:
                 if self.dataset.label_names is not None:
                     example.attack_attrs["label_names"] = self.dataset.label_names
                 try:
+                    if 'lsh' in self.attack_args.max_budget_key_type:
+                        assert self.attack_args.model in ['bert-base-uncased-imdb','bert-base-uncased-yelp','bert-base-uncased-mnli'], f"self.attack_args.model : {self.attack_args.model} not in ['bert-base-uncased-imdb','bert-base-uncased-yelp','bert-base-uncased-mnli']"
+                        assert self.attack_args.attack_recipe in ['bayesattack-wordnet','bayesattack-hownet','bayesattack-embedding','bayesattack-wordnet-pre','bayesattack-hownet-pre','bayesattack-embedding-pre'],f"self.attack_args.recipe : {self.attack_args.attack_recipe} not in ['bayesattack-wordnet','bayesattack-hownet','bayesattack-embedding','bayesattack-wordnet-pre','bayesattack-hownet-pre','bayesattack-embedding-pre']"
+                        setattr(self.attack.search_method, 'max_budget_path', 'MAX_BUDGET/' + self.attack_args.model + '-' + self.attack_args.max_budget_key_type + '-' + self.attack_args.attack_recipe[12:] + '.pkl')
+                        setattr(self.attack.search_method, 'example_index', ct)
                     result = self.attack.attack(example, ground_truth_output)
                 except Exception as e:
                     raise e
