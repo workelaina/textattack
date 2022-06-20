@@ -273,7 +273,7 @@ class AttackArgs:
     use_sod: bool = False
     dpp_type: str = 'dpp_posterior'
     max_loop: int = 5
-    fit_iter: int = 1
+    fit_iter: int = 3
 
     max_budget_key_type: str = ''
 
