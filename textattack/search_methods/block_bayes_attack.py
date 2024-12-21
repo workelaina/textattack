@@ -14,7 +14,7 @@ from copy import deepcopy
 import gc
 
 import sys, os
-sys.path.append('../')
+# sys.path.append('../')
 from algorithms import BlockBayesAttack
 import time
 from textattack.shared.utils import read_pkl
