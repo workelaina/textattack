@@ -169,7 +169,20 @@ class DiscreteBlockBayesAttack(SearchMethod):
         dpp_type : dpp type. one of ['no','dpp_posterior']
     """
 
-    def __init__(self, block_size=40, batch_size=4, update_step=1, max_patience=50, post_opt='v3', use_sod=True, dpp_type='dpp_posterior', max_loop=5, fit_iter=1, max_budget_key_type=''):
+    def __init__(
+        self,
+        block_size=1024,
+        batch_size=1,
+        update_step=1,
+        max_patience=50,
+        post_opt='',
+        use_sod=False,
+        dpp_type='no',
+        max_loop=5,
+        fit_iter=1,
+        max_budget_key_type='',
+        ely_query_budget=None
+    ):
         
         self.block_size = block_size
         self.batch_size = batch_size
@@ -181,6 +194,7 @@ class DiscreteBlockBayesAttack(SearchMethod):
         self.max_loop = max_loop
         self.fit_iter = fit_iter
         self.max_budget_key_type = max_budget_key_type
+        self.ely_query_budget = ely_query_budget
 
         self.memory_count = 0
     
@@ -193,10 +207,14 @@ class DiscreteBlockBayesAttack(SearchMethod):
         BBM.set_x(x0)
         n_vertices = BBM.n_vertices
 
-        if self.max_budget_key_type == 'lsh':
-            query_budget = read_pkl(self.max_budget_path)[self.example_index]
+        if self.ely_query_budget is None:
+            if self.max_budget_key_type == 'lsh':
+                query_budget = read_pkl(self.max_budget_path)[self.example_index]
+            else:
+                query_budget = get_query_budget(x0, BBM.word_substitution_cache, baseline=self.max_budget_key_type)
         else:
-            query_budget = get_query_budget(x0, BBM.word_substitution_cache, baseline=self.max_budget_key_type)
+            query_budget = self.ely_query_budget
+
         if query_budget <= 1:
             att_result = initial_result
             attack_logs = None
@@ -227,8 +245,7 @@ class DiscreteBlockBayesAttack(SearchMethod):
         setattr(att_result, 'attack_logs', attack_logs)
         setattr(att_result, 'query_budget', query_budget)
         return att_result
-    
-        
+
     @property
     def is_black_box(self):
         return True
