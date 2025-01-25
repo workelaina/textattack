@@ -192,12 +192,14 @@ class DiscreteBlockBayesAttack(SearchMethod):
         update_step=1,
         max_patience=50,
         post_opt='',
-        use_sod=False,
+        use_sod=True,
         dpp_type='no',
         max_loop=5,
         fit_iter=1,
         max_budget_key_type='',
-        ely_query_budget=None
+        ely_query_budget=None,
+        ely_use_UJ=True,
+        ely_token_k=10,
     ):
 
         self.block_size = block_size
@@ -211,6 +213,8 @@ class DiscreteBlockBayesAttack(SearchMethod):
         self.fit_iter = fit_iter
         self.max_budget_key_type = max_budget_key_type
         self.ely_query_budget = ely_query_budget
+        self.ely_use_UJ = ely_use_UJ
+        self.ely_token_k = ely_token_k
 
         self.memory_count = 0
 
@@ -260,7 +264,9 @@ class DiscreteBlockBayesAttack(SearchMethod):
                 use_sod=self.use_sod,
                 dpp_type=self.dpp_type,
                 max_loop=self.max_loop,
-                fit_iter=self.fit_iter
+                fit_iter=self.fit_iter,
+                ely_use_UJ=self.ely_use_UJ,
+                ely_token_k=self.ely_token_k,
             )
 
             attacker_input = torch.zeros(1, len(x0.words))
