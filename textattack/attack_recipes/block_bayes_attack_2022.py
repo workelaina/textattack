@@ -40,17 +40,8 @@ class DiscreteBlockBayesAttackWordNet(AttackRecipe):
     https://arxiv.org/abs/2109.04775
     """
     @staticmethod
-    def build(model, block_size=40, batch_size=4, update_step=1, max_patience=50, post_opt='v3', use_sod=True, dpp_type='dpp_posterior', max_loop=5, fit_iter=20, max_budget_key_type=''):
-        print("block_size", block_size)
-        print("batch_size", batch_size)
-        print("update_step", update_step)
-        print("max_patience", max_patience)
-        print("post_opt", post_opt)
-        print("use_sod", use_sod)
-        print("dpp_type", dpp_type)
-        print("max_loop", max_loop)
-        print("fit_iter", fit_iter)
-        print("max_budget_key_type", max_budget_key_type)
+    def build(model, **kwargs):
+        print(kwargs)
         transformation = WordSwapWordNet()
         constraints = [RepeatModification(), StopwordModification()]
         input_column_modification = InputColumnModification(
@@ -62,35 +53,15 @@ class DiscreteBlockBayesAttackWordNet(AttackRecipe):
         )
         constraints.append(input_column_modification)
         goal_function = UntargetedClassificationDiff(model)
-        search_method = DiscreteBlockBayesAttack(
-            block_size=block_size,
-            batch_size=batch_size,
-            update_step=update_step,
-            max_patience=max_patience,
-            post_opt=post_opt,
-            use_sod=use_sod,
-            dpp_type=dpp_type, 
-            max_loop=max_loop,
-            fit_iter=fit_iter,
-            max_budget_key_type=max_budget_key_type,
-        )
+        search_method = DiscreteBlockBayesAttack(**kwargs)
         return Attack(goal_function, constraints, transformation, search_method)
 
 
 class DiscreteBlockBayesAttackHowNet(AttackRecipe):
 
     @staticmethod
-    def build(model, block_size=40, batch_size=4, update_step=1, max_patience=50, post_opt='v3', use_sod=True, dpp_type='dpp_posterior', max_loop=5, fit_iter=20, max_budget_key_type=''):
-        print("block_size", block_size)
-        print("batch_size", batch_size)
-        print("update_step", update_step)
-        print("max_patience", max_patience)
-        print("post_opt", post_opt)
-        print("use_sod", use_sod)
-        print("dpp_type", dpp_type)
-        print("max_loop", max_loop)
-        print("fit_iter", fit_iter)
-        print("max_budget_key_type", max_budget_key_type)
+    def build(model, **kwargs):
+        print(kwargs)
         #
         # Swap words with their synonyms extracted based on the HowNet.
         #
@@ -116,34 +87,14 @@ class DiscreteBlockBayesAttackHowNet(AttackRecipe):
         # Use untargeted classification for demo, can be switched to targeted one
         #
         goal_function = UntargetedClassificationDiff(model)
-        search_method = DiscreteBlockBayesAttack(
-            block_size=block_size,
-            batch_size=batch_size,
-            update_step=update_step,
-            max_patience=max_patience,
-            post_opt=post_opt,
-            use_sod=use_sod,
-            dpp_type=dpp_type, 
-            max_loop=max_loop,
-            fit_iter=fit_iter,
-            max_budget_key_type=max_budget_key_type,
-        )
+        search_method = DiscreteBlockBayesAttack(**kwargs)
         return Attack(goal_function, constraints, transformation, search_method)
 
 class DiscreteBlockBayesAttackEmbedding(AttackRecipe):
 
     @staticmethod
-    def build(model, block_size=40, batch_size=4, update_step=1, max_patience=50, post_opt='v3', use_sod=True, dpp_type='dpp_posterior', max_loop=5, fit_iter=20, max_budget_key_type=''):
-        print("block_size", block_size)
-        print("batch_size", batch_size)
-        print("update_step", update_step)
-        print("max_patience", max_patience)
-        print("post_opt", post_opt)
-        print("use_sod", use_sod)
-        print("dpp_type", dpp_type)
-        print("max_loop", max_loop)
-        print("fit_iter", fit_iter)
-        print("max_budget_key_type", max_budget_key_type)
+    def build(model, **kwargs):
+        print(kwargs)
         #
         # Swap words with their 50 closest embedding nearest-neighbors.
         # Embedding: Counter-fitted PARAGRAM-SL999 vectors.
@@ -202,36 +153,16 @@ class DiscreteBlockBayesAttackEmbedding(AttackRecipe):
         #
         # Greedily swap words with "Word Importance Ranking".
         #
-        search_method = DiscreteBlockBayesAttack(
-            block_size=block_size,
-            batch_size=batch_size,
-            update_step=update_step,
-            max_patience=max_patience,
-            post_opt=post_opt,
-            use_sod=use_sod,
-            dpp_type=dpp_type, 
-            max_loop=max_loop,
-            fit_iter=fit_iter,
-            max_budget_key_type=max_budget_key_type,
-        )
+        search_method = DiscreteBlockBayesAttack(**kwargs)
         return Attack(goal_function, constraints, transformation, search_method)
 
 
 class DiscreteBlockBayesAttackEmbeddingGen(AttackRecipe):
 
     @staticmethod
-    def build(model, block_size=40, batch_size=4, update_step=1, max_patience=50, post_opt='v3', use_sod=True, dpp_type='dpp_posterior', max_loop=5, fit_iter=20, max_budget_key_type=''):
+    def build(model, **kwargs):
+        print(kwargs)
         transformation = WordSwapEmbedding(max_candidates=8)
-        print("block_size", block_size)
-        print("batch_size", batch_size)
-        print("update_step", update_step)
-        print("max_patience", max_patience)
-        print("post_opt", post_opt)
-        print("use_sod", use_sod)
-        print("dpp_type", dpp_type)
-        print("max_loop", max_loop)
-        print("fit_iter", fit_iter)
-        print("max_budget_key_type", max_budget_key_type)
         #
         # Don't modify the same word twice or stopwords
         #
@@ -265,18 +196,7 @@ class DiscreteBlockBayesAttackEmbeddingGen(AttackRecipe):
         #
         # Perform word substitution with a genetic algorithm.
         #
-        search_method = DiscreteBlockBayesAttack(
-            block_size=block_size,
-            batch_size=batch_size,
-            update_step=update_step,
-            max_patience=max_patience,
-            post_opt=post_opt,
-            use_sod=use_sod,
-            dpp_type=dpp_type, 
-            max_loop=max_loop,
-            fit_iter=fit_iter,
-            max_budget_key_type=max_budget_key_type,
-        ) 
+        search_method = DiscreteBlockBayesAttack(**kwargs) 
         return Attack(goal_function, constraints, transformation, search_method)
 
 
@@ -293,17 +213,8 @@ class DiscreteBlockBayesAttackWordNetHypothesis(AttackRecipe):
     """
 
     @staticmethod
-    def build(model, block_size=40, batch_size=4, update_step=1, max_patience=50, post_opt='v3', use_sod=True, dpp_type='dpp_posterior', max_loop=5, fit_iter=20, max_budget_key_type=''):
-        print("block_size", block_size)
-        print("batch_size", batch_size)
-        print("update_step", update_step)
-        print("max_patience", max_patience)
-        print("post_opt", post_opt)
-        print("use_sod", use_sod)
-        print("dpp_type", dpp_type)
-        print("max_loop", max_loop)
-        print("fit_iter", fit_iter)
-        print("max_budget_key_type", max_budget_key_type)
+    def build(model, **kwargs):
+        print(kwargs)
         transformation = WordSwapWordNet()
         constraints = [RepeatModification(), StopwordModification()]
         input_column_modification = InputColumnModification(
@@ -315,35 +226,15 @@ class DiscreteBlockBayesAttackWordNetHypothesis(AttackRecipe):
         )
         constraints.append(input_column_modification)
         goal_function = UntargetedClassificationDiff(model)
-        search_method = DiscreteBlockBayesAttack(
-            block_size=block_size,
-            batch_size=batch_size,
-            update_step=update_step,
-            max_patience=max_patience,
-            post_opt=post_opt,
-            use_sod=use_sod,
-            dpp_type=dpp_type, 
-            max_loop=max_loop,
-            fit_iter=fit_iter,
-            max_budget_key_type=max_budget_key_type,
-        )
+        search_method = DiscreteBlockBayesAttack(**kwargs)
         return Attack(goal_function, constraints, transformation, search_method)
 
 
 class DiscreteBlockBayesAttackHowNetHypothesis(AttackRecipe):
 
     @staticmethod
-    def build(model, block_size=40, batch_size=4, update_step=1, max_patience=50, post_opt='v3', use_sod=True, dpp_type='dpp_posterior', max_loop=5, fit_iter=20, max_budget_key_type=''):
-        print("block_size", block_size)
-        print("batch_size", batch_size)
-        print("update_step", update_step)
-        print("max_patience", max_patience)
-        print("post_opt", post_opt)
-        print("use_sod", use_sod)
-        print("dpp_type", dpp_type)
-        print("max_loop", max_loop)
-        print("fit_iter", fit_iter)
-        print("max_budget_key_type", max_budget_key_type)
+    def build(model, **kwargs):
+        print(kwargs)
         #
         # Swap words with their synonyms extracted based on the HowNet.
         #
@@ -369,34 +260,14 @@ class DiscreteBlockBayesAttackHowNetHypothesis(AttackRecipe):
         # Use untargeted classification for demo, can be switched to targeted one
         #
         goal_function = UntargetedClassificationDiff(model)
-        search_method = DiscreteBlockBayesAttack(
-            block_size=block_size,
-            batch_size=batch_size,
-            update_step=update_step,
-            max_patience=max_patience,
-            post_opt=post_opt,
-            use_sod=use_sod,
-            dpp_type=dpp_type, 
-            max_loop=max_loop,
-            fit_iter=fit_iter,
-            max_budget_key_type=max_budget_key_type,
-        )
+        search_method = DiscreteBlockBayesAttack(**kwargs)
         return Attack(goal_function, constraints, transformation, search_method)
 
 class DiscreteBlockBayesAttackEmbeddingHypothesis(AttackRecipe):
 
     @staticmethod
-    def build(model, block_size=40, batch_size=4, update_step=1, max_patience=50, post_opt='v3', use_sod=True, dpp_type='dpp_posterior', max_loop=5, fit_iter=20, max_budget_key_type=''):
-        print("block_size", block_size)
-        print("batch_size", batch_size)
-        print("update_step", update_step)
-        print("max_patience", max_patience)
-        print("post_opt", post_opt)
-        print("use_sod", use_sod)
-        print("dpp_type", dpp_type)
-        print("max_loop", max_loop)
-        print("fit_iter", fit_iter)
-        print("max_budget_key_type", max_budget_key_type)
+    def build(model, **kwargs):
+        print(kwargs)
         #
         # Swap words with their 50 closest embedding nearest-neighbors.
         # Embedding: Counter-fitted PARAGRAM-SL999 vectors.
@@ -454,36 +325,16 @@ class DiscreteBlockBayesAttackEmbeddingHypothesis(AttackRecipe):
         goal_function = UntargetedClassificationDiff(model)
         #
         # Greedily swap words with "Word Importance Ranking".
-        search_method = DiscreteBlockBayesAttack(
-            block_size=block_size,
-            batch_size=batch_size,
-            update_step=update_step,
-            max_patience=max_patience,
-            post_opt=post_opt,
-            use_sod=use_sod,
-            dpp_type=dpp_type, 
-            max_loop=max_loop,
-            fit_iter=fit_iter,
-            max_budget_key_type=max_budget_key_type,
-        )
+        search_method = DiscreteBlockBayesAttack(**kwargs)
         return Attack(goal_function, constraints, transformation, search_method)
 
 
 class DiscreteBlockBayesAttackEmbeddingGenHypothesis(AttackRecipe):
 
     @staticmethod
-    def build(model, block_size=40, batch_size=4, update_step=1, max_patience=50, post_opt='v3', use_sod=True, dpp_type='dpp_posterior', max_loop=5, fit_iter=20, max_budget_key_type=''):
+    def build(model, **kwargs):
+        print(kwargs)
         transformation = WordSwapEmbedding(max_candidates=8)
-        print("block_size", block_size)
-        print("batch_size", batch_size)
-        print("update_step", update_step)
-        print("max_patience", max_patience)
-        print("post_opt", post_opt)
-        print("use_sod", use_sod)
-        print("dpp_type", dpp_type)
-        print("max_loop", max_loop)
-        print("fit_iter", fit_iter)
-        print("max_budget_key_type", max_budget_key_type)
         #
         # Don't modify the same word twice or stopwords
         #
@@ -517,35 +368,15 @@ class DiscreteBlockBayesAttackEmbeddingGenHypothesis(AttackRecipe):
         #
         # Perform word substitution with a genetic algorithm.
         #
-        search_method = DiscreteBlockBayesAttack(
-            block_size=block_size,
-            batch_size=batch_size,
-            update_step=update_step,
-            max_patience=max_patience,
-            post_opt=post_opt,
-            use_sod=use_sod,
-            dpp_type=dpp_type, 
-            max_loop=max_loop,
-            fit_iter=fit_iter,
-            max_budget_key_type=max_budget_key_type,
-        )
+        search_method = DiscreteBlockBayesAttack(**kwargs)
         return Attack(goal_function, constraints, transformation, search_method)
 
 
 from textattack.transformations import WordSwapMaskedLM
 class DiscreteBlockBayesAttackBAE(AttackRecipe):
     @staticmethod
-    def build(model, block_size=40, batch_size=4, update_step=1, max_patience=50, post_opt='v3', use_sod=True, dpp_type='dpp_posterior', max_loop=5, fit_iter=20, max_budget_key_type=''):
-        print("block_size", block_size)
-        print("batch_size", batch_size)
-        print("update_step", update_step)
-        print("max_patience", max_patience)
-        print("post_opt", post_opt)
-        print("use_sod", use_sod)
-        print("dpp_type", dpp_type)
-        print("max_loop", max_loop)
-        print("fit_iter", fit_iter)
-        print("max_budget_key_type", max_budget_key_type)
+    def build(model, **kwargs):
+        print(kwargs)
         transformation = WordSwapMaskedLM(
             method="bae", max_candidates=50, min_confidence=0.0
         )
@@ -560,33 +391,13 @@ class DiscreteBlockBayesAttackBAE(AttackRecipe):
         )
         constraints.append(use_constraint)
         goal_function = UntargetedClassificationDiff(model)
-        search_method = DiscreteBlockBayesAttack(
-            block_size=block_size,
-            batch_size=batch_size,
-            update_step=update_step,
-            max_patience=max_patience,
-            post_opt=post_opt,
-            use_sod=use_sod,
-            dpp_type=dpp_type, 
-            max_loop=max_loop,
-            fit_iter=fit_iter,
-            max_budget_key_type=max_budget_key_type,
-        )
+        search_method = DiscreteBlockBayesAttack(**kwargs)
         return Attack(goal_function, constraints, transformation, search_method)
 
 class DiscreteBlockBayesAttackBERTAttack(AttackRecipe):
     @staticmethod
-    def build(model, block_size=40, batch_size=4, update_step=1, max_patience=50, post_opt='v3', use_sod=True, dpp_type='dpp_posterior', max_loop=5, fit_iter=20, max_budget_key_type=''):
-        print("block_size", block_size)
-        print("batch_size", batch_size)
-        print("update_step", update_step)
-        print("max_patience", max_patience)
-        print("post_opt", post_opt)
-        print("use_sod", use_sod)
-        print("dpp_type", dpp_type)
-        print("max_loop", max_loop)
-        print("fit_iter", fit_iter)
-        print("max_budget_key_type", max_budget_key_type)
+    def build(model, **kwargs):
+        print(kwargs)
         transformation = WordSwapMaskedLM(method="bert-attack", max_candidates=8)
         constraints = [RepeatModification(), StopwordModification()]
 
@@ -599,16 +410,5 @@ class DiscreteBlockBayesAttackBERTAttack(AttackRecipe):
         constraints.append(use_constraint)
 
         goal_function = UntargetedClassificationDiff(model)
-        search_method = DiscreteBlockBayesAttack(
-            block_size=block_size,
-            batch_size=batch_size,
-            update_step=update_step,
-            max_patience=max_patience,
-            post_opt=post_opt,
-            use_sod=use_sod,
-            dpp_type=dpp_type, 
-            max_loop=max_loop,
-            fit_iter=fit_iter,
-            max_budget_key_type=max_budget_key_type,
-        )
+        search_method = DiscreteBlockBayesAttack(**kwargs)
         return Attack(goal_function, constraints, transformation, search_method)
