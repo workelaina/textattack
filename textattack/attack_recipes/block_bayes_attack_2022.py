@@ -29,7 +29,7 @@ from textattack.constraints.overlap import MaxWordsPerturbed
 from .attack_recipe import AttackRecipe
 
 
-class DiscreteBlockBayesAttackWordNet(AttackRecipe):
+class TokenWiseBayesOptimWordNet(AttackRecipe):
     """An implementation of the paper "A Strong Baseline for
     Query Efficient Attacks in a Black Box Setting", Maheshwary et al., 2021.
 
@@ -57,7 +57,7 @@ class DiscreteBlockBayesAttackWordNet(AttackRecipe):
         return Attack(goal_function, constraints, transformation, search_method)
 
 
-class DiscreteBlockBayesAttackHowNet(AttackRecipe):
+class TokenWiseBayesOptimHowNet(AttackRecipe):
 
     @staticmethod
     def build(model, **kwargs):
@@ -90,7 +90,7 @@ class DiscreteBlockBayesAttackHowNet(AttackRecipe):
         search_method = TokenWiseBayesOptim(**kwargs)
         return Attack(goal_function, constraints, transformation, search_method)
 
-class DiscreteBlockBayesAttackEmbedding(AttackRecipe):
+class TokenWiseBayesOptimEmbedding(AttackRecipe):
 
     @staticmethod
     def build(model, **kwargs):
@@ -157,7 +157,7 @@ class DiscreteBlockBayesAttackEmbedding(AttackRecipe):
         return Attack(goal_function, constraints, transformation, search_method)
 
 
-class DiscreteBlockBayesAttackEmbeddingGen(AttackRecipe):
+class TokenWiseBayesOptimEmbeddingGen(AttackRecipe):
 
     @staticmethod
     def build(model, **kwargs):
@@ -201,7 +201,7 @@ class DiscreteBlockBayesAttackEmbeddingGen(AttackRecipe):
 
 
 
-class DiscreteBlockBayesAttackWordNetHypothesis(AttackRecipe):
+class TokenWiseBayesOptimWordNetHypothesis(AttackRecipe):
     """An implementation of the paper "A Strong Baseline for
     Query Efficient Attacks in a Black Box Setting", Maheshwary et al., 2021.
 
@@ -230,7 +230,7 @@ class DiscreteBlockBayesAttackWordNetHypothesis(AttackRecipe):
         return Attack(goal_function, constraints, transformation, search_method)
 
 
-class DiscreteBlockBayesAttackHowNetHypothesis(AttackRecipe):
+class TokenWiseBayesOptimHowNetHypothesis(AttackRecipe):
 
     @staticmethod
     def build(model, **kwargs):
@@ -263,7 +263,7 @@ class DiscreteBlockBayesAttackHowNetHypothesis(AttackRecipe):
         search_method = TokenWiseBayesOptim(**kwargs)
         return Attack(goal_function, constraints, transformation, search_method)
 
-class DiscreteBlockBayesAttackEmbeddingHypothesis(AttackRecipe):
+class TokenWiseBayesOptimEmbeddingHypothesis(AttackRecipe):
 
     @staticmethod
     def build(model, **kwargs):
@@ -329,7 +329,7 @@ class DiscreteBlockBayesAttackEmbeddingHypothesis(AttackRecipe):
         return Attack(goal_function, constraints, transformation, search_method)
 
 
-class DiscreteBlockBayesAttackEmbeddingGenHypothesis(AttackRecipe):
+class TokenWiseBayesOptimEmbeddingGenHypothesis(AttackRecipe):
 
     @staticmethod
     def build(model, **kwargs):
@@ -373,7 +373,7 @@ class DiscreteBlockBayesAttackEmbeddingGenHypothesis(AttackRecipe):
 
 
 from textattack.transformations import WordSwapMaskedLM
-class DiscreteBlockBayesAttackBAE(AttackRecipe):
+class TokenWiseBayesOptimBAE(AttackRecipe):
     @staticmethod
     def build(model, **kwargs):
         print(kwargs)
@@ -394,7 +394,7 @@ class DiscreteBlockBayesAttackBAE(AttackRecipe):
         search_method = TokenWiseBayesOptim(**kwargs)
         return Attack(goal_function, constraints, transformation, search_method)
 
-class DiscreteBlockBayesAttackBERTAttack(AttackRecipe):
+class TokenWiseBayesOptimBERTAttack(AttackRecipe):
     @staticmethod
     def build(model, **kwargs):
         print(kwargs)
