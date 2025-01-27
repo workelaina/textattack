@@ -16,7 +16,7 @@ import gc
 import os
 import sys
 # sys.path.append('../')
-from algorithms import BlockBayesAttack
+from algorithms import TokenWiseBO
 import time
 from textattack.shared.utils import read_pkl
 
