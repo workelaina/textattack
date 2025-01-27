@@ -234,7 +234,7 @@ class TokenWiseBayesOptim(SearchMethod):
         else:
             BBM.set_query_budget(query_budget)
             self.goal_function.query_budget = query_budget
-            attacker = BlockBayesAttack(
+            attacker = TokenWiseBO(
                 **self.ely_kwargs
             )
 
