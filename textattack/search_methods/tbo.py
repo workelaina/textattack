@@ -178,7 +178,7 @@ class BlackBoxModel():
             return scores
 
 
-class DiscreteBlockBayesAttack(SearchMethod):
+class TokenWiseBayesOptim(SearchMethod):
     """An attack based on Bayesian Optimization
 
     Args:

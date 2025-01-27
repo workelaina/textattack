@@ -19,7 +19,7 @@ from textattack.constraints.grammaticality import PartOfSpeech
 from textattack.constraints.semantics.sentence_encoders import UniversalSentenceEncoder
 from textattack.transformations import WordSwapHowNet
 from textattack.goal_functions import UntargetedClassificationDiff
-from textattack.search_methods import DiscreteBlockBayesAttack
+from textattack.search_methods import TokenWiseBayesOptim
 from textattack import Attack
 from textattack.transformations import WordSwapWordNet
 from textattack.transformations import WordSwapEmbedding
@@ -53,7 +53,7 @@ class DiscreteBlockBayesAttackWordNet(AttackRecipe):
         )
         constraints.append(input_column_modification)
         goal_function = UntargetedClassificationDiff(model)
-        search_method = DiscreteBlockBayesAttack(**kwargs)
+        search_method = TokenWiseBayesOptim(**kwargs)
         return Attack(goal_function, constraints, transformation, search_method)
 
 
@@ -87,7 +87,7 @@ class DiscreteBlockBayesAttackHowNet(AttackRecipe):
         # Use untargeted classification for demo, can be switched to targeted one
         #
         goal_function = UntargetedClassificationDiff(model)
-        search_method = DiscreteBlockBayesAttack(**kwargs)
+        search_method = TokenWiseBayesOptim(**kwargs)
         return Attack(goal_function, constraints, transformation, search_method)
 
 class DiscreteBlockBayesAttackEmbedding(AttackRecipe):
@@ -153,7 +153,7 @@ class DiscreteBlockBayesAttackEmbedding(AttackRecipe):
         #
         # Greedily swap words with "Word Importance Ranking".
         #
-        search_method = DiscreteBlockBayesAttack(**kwargs)
+        search_method = TokenWiseBayesOptim(**kwargs)
         return Attack(goal_function, constraints, transformation, search_method)
 
 
@@ -196,7 +196,7 @@ class DiscreteBlockBayesAttackEmbeddingGen(AttackRecipe):
         #
         # Perform word substitution with a genetic algorithm.
         #
-        search_method = DiscreteBlockBayesAttack(**kwargs) 
+        search_method = TokenWiseBayesOptim(**kwargs) 
         return Attack(goal_function, constraints, transformation, search_method)
 
 
@@ -226,7 +226,7 @@ class DiscreteBlockBayesAttackWordNetHypothesis(AttackRecipe):
         )
         constraints.append(input_column_modification)
         goal_function = UntargetedClassificationDiff(model)
-        search_method = DiscreteBlockBayesAttack(**kwargs)
+        search_method = TokenWiseBayesOptim(**kwargs)
         return Attack(goal_function, constraints, transformation, search_method)
 
 
@@ -260,7 +260,7 @@ class DiscreteBlockBayesAttackHowNetHypothesis(AttackRecipe):
         # Use untargeted classification for demo, can be switched to targeted one
         #
         goal_function = UntargetedClassificationDiff(model)
-        search_method = DiscreteBlockBayesAttack(**kwargs)
+        search_method = TokenWiseBayesOptim(**kwargs)
         return Attack(goal_function, constraints, transformation, search_method)
 
 class DiscreteBlockBayesAttackEmbeddingHypothesis(AttackRecipe):
@@ -325,7 +325,7 @@ class DiscreteBlockBayesAttackEmbeddingHypothesis(AttackRecipe):
         goal_function = UntargetedClassificationDiff(model)
         #
         # Greedily swap words with "Word Importance Ranking".
-        search_method = DiscreteBlockBayesAttack(**kwargs)
+        search_method = TokenWiseBayesOptim(**kwargs)
         return Attack(goal_function, constraints, transformation, search_method)
 
 
@@ -368,7 +368,7 @@ class DiscreteBlockBayesAttackEmbeddingGenHypothesis(AttackRecipe):
         #
         # Perform word substitution with a genetic algorithm.
         #
-        search_method = DiscreteBlockBayesAttack(**kwargs)
+        search_method = TokenWiseBayesOptim(**kwargs)
         return Attack(goal_function, constraints, transformation, search_method)
 
 
@@ -391,7 +391,7 @@ class DiscreteBlockBayesAttackBAE(AttackRecipe):
         )
         constraints.append(use_constraint)
         goal_function = UntargetedClassificationDiff(model)
-        search_method = DiscreteBlockBayesAttack(**kwargs)
+        search_method = TokenWiseBayesOptim(**kwargs)
         return Attack(goal_function, constraints, transformation, search_method)
 
 class DiscreteBlockBayesAttackBERTAttack(AttackRecipe):
@@ -410,5 +410,5 @@ class DiscreteBlockBayesAttackBERTAttack(AttackRecipe):
         constraints.append(use_constraint)
 
         goal_function = UntargetedClassificationDiff(model)
-        search_method = DiscreteBlockBayesAttack(**kwargs)
+        search_method = TokenWiseBayesOptim(**kwargs)
         return Attack(goal_function, constraints, transformation, search_method)
