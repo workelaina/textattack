@@ -187,35 +187,14 @@ class TokenWiseBayesOptim(SearchMethod):
 
     def __init__(
         self,
-        block_size=1024,
-        batch_size=1,
-        update_step=1,
-        max_patience=50,
-        post_opt='',
-        use_sod=True,
-        dpp_type='no',
-        max_loop=5,
-        fit_iter=1,
         max_budget_key_type='',
         ely_query_budget=None,
-        ely_use_UJ=True,
-        ely_token_k=10,
+        **kwargs
     ):
+        self.ely_kwargs = kwargs
 
-        self.block_size = block_size
-        self.batch_size = batch_size
-        self.update_step = update_step
-        self.max_patience = max_patience
-        self.post_opt = post_opt
-        self.use_sod = use_sod
-        self.dpp_type = dpp_type
-        self.max_loop = max_loop
-        self.fit_iter = fit_iter
         self.max_budget_key_type = max_budget_key_type
         self.ely_query_budget = ely_query_budget
-        self.ely_use_UJ = ely_use_UJ
-        self.ely_token_k = ely_token_k
-
         self.memory_count = 0
 
     def perform_search(self, initial_result):
@@ -256,17 +235,7 @@ class TokenWiseBayesOptim(SearchMethod):
             BBM.set_query_budget(query_budget)
             self.goal_function.query_budget = query_budget
             attacker = BlockBayesAttack(
-                block_size=self.block_size,
-                batch_size=self.batch_size,
-                update_step=self.update_step,
-                max_patience=self.max_patience,
-                post_opt=self.post_opt,
-                use_sod=self.use_sod,
-                dpp_type=self.dpp_type,
-                max_loop=self.max_loop,
-                fit_iter=self.fit_iter,
-                ely_use_UJ=self.ely_use_UJ,
-                ely_token_k=self.ely_token_k,
+                **self.ely_kwargs
             )
 
             attacker_input = torch.zeros(1, len(x0.words))
