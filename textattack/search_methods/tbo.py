@@ -229,6 +229,7 @@ class TokenWiseBayesOptim(SearchMethod):
             query_budget = self.ely_query_budget
 
         if query_budget <= 1:
+            raise ValueError('query_budget <= 1')
             att_result = initial_result
             attack_logs = None
         else:
