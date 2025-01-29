@@ -199,20 +199,6 @@ class TokenWiseBayesOptim(SearchMethod):
 
     def perform_search(self, initial_result):
         init_time = time.time()
-        BBM = BlackBoxModel(
-            model=self.get_goal_results,
-            goal_function=self.goal_function,
-            transformer=self.get_transformations
-        )
-        BBM.initialize_num_queries()
-        print(
-            "initial query in perform_search func:",
-            self.goal_function.num_queries,
-            BBM.num_queries
-        )
-        x0 = initial_result.attacked_text
-        BBM.set_x(x0)
-        n_vertices = BBM.n_vertices
 
         if self.ely_query_budget is None:
             if self.max_budget_key_type == 'lsh':
@@ -230,25 +216,36 @@ class TokenWiseBayesOptim(SearchMethod):
 
         if query_budget <= 1:
             raise ValueError('query_budget <= 1')
-            att_result = initial_result
-            attack_logs = None
-        else:
-            BBM.set_query_budget(query_budget)
-            self.goal_function.query_budget = query_budget
-            attacker = TokenWiseBO(
-                **self.ely_kwargs
-            )
 
-            attacker_input = torch.zeros(1, len(x0.words))
-            x_att, attack_logs = attacker.perform_search(
-                attacker_input,
-                n_vertices,
-                BBM
-            )
-            x_att_transformed = BBM.seq2input(x_att)
+        self.goal_function.num_queries = 0
+        self.goal_function.query_budget = query_budget
+        BBM = BlackBoxModel(
+            model=self.get_goal_results,
+            goal_function=self.goal_function,
+            transformer=self.get_transformations
+        )
+        BBM.initialize_num_queries()
+        BBM.set_query_budget(query_budget)
+        assert BBM.num_queries == 0
 
-            att_result = self.get_goal_results([x_att_transformed])[0][0]
-            assert BBM.num_queries == self.goal_function.num_queries, f"something wrong! {BBM.num_queries} != {self.goal_function.num_queries}"
+        x0 = initial_result.attacked_text
+        BBM.set_x(x0)
+        n_vertices = BBM.n_vertices
+
+        attacker = TokenWiseBO(
+            **self.ely_kwargs
+        )
+
+        attacker_input = torch.zeros(1, len(x0.words))
+        x_att, attack_logs = attacker.perform_search(
+            attacker_input,
+            n_vertices,
+            BBM
+        )
+        x_att_transformed = BBM.seq2input(x_att)
+
+        att_result = self.get_goal_results([x_att_transformed])[0][0]
+        assert BBM.num_queries == self.goal_function.num_queries, f"something wrong! {BBM.num_queries} != {self.goal_function.num_queries}"
 
         elapsed_time = time.time() - init_time
         setattr(att_result, 'elapsed_time', elapsed_time)
